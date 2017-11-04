@@ -23,13 +23,13 @@ class Updater
     root_job = JSON.parse(RestClient.get("https://ci.nodejs.org/job/node-test-commit/#{root_job_id}/api/json").body)
 
     root_job['subBuilds'].each do |sub_build|
-      if sub_build['result'] == 'SUCCESS'
+      if sub_build['result'] == 'SUCCESS' # all tess pass
         status = 'success'
-      else
+      elsif sub_build['result'] == 'UNSTABLE' # flaky tests fail
+        status = 'unstable'
+      elsif sub_build['result'] == 'FAILURE' # real tests fail
         status = 'failure'
       end
-
-      next unless JOB_MAP[sub_build['jobName']] == 'linter' || JOB_MAP[sub_build['jobName']] == 'test/osx'
 
       trigger_update_build({
         'IDENTIFIER' => JOB_MAP[sub_build['jobName']],
